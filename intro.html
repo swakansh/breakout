@@ -6,6 +6,7 @@
 			Breakout game
 		</title>
 		<style>
+			@import url('https://fonts.googleapis.com/css?family=Montserrat');
 			#container{
 				width:1000px;
 				height:600px;
@@ -15,6 +16,7 @@
 				font-family:Verdana;
 				border:5px dashed #3D9970;
 				text-align:center;
+				font-family:'Montserrat', sans-serif;
 			}
 			#wrap{
 				width:90%;
@@ -56,7 +58,7 @@
 				<h1>Breakout game</h1>
 				<div id="content">
 					<p>
-						Breakout is an arcade game developed and published by Atari, Inc. It was conceptualized by Nolan Bushnell and Steve Bristow, influenced by the 1972 Atari arcade game Pong, and built by Steve Wozniak aided by Steve Jobs. The game was ported to multiple platforms and upgraded to video games such as Super Breakout. In addition, Breakout was the basis and inspiration for certain aspects of the Apple II personal computer.
+						Breakout is an arcade game developed and published by Atari, Inc. It was built by Steve Wozniak aided by Steve Jobs. The game was ported to multiple platforms and upgraded to video games such as Super Breakout. In addition, Breakout was the basis and inspiration for certain aspects of the Apple II personal computer.
 						</br></br>
 						In the game, a layer of bricks lines the top of the screen. A ball travels across the screen, bouncing off the top and side walls of the screen. When a brick is hit, the ball bounces away and the brick is destroyed. The player loses a turn when the ball touches the bottom of the screen. To prevent this from happening, the player has a movable paddle to bounce the ball upward, keeping it in play.
 					</p>
@@ -66,6 +68,7 @@
 					<p>
 						<ul>
 							<li>There will be <b>three levels</b> in this game.</li>
+							<li>Each brick has some strength from 1 to 4 that is assigned randomly, meaning for a brick of</br>strength 2, the ball needs to touch that same brick twice to destroy it.</li>
 							<li>For every level, player will have two lives.</li>
 							<li>Lives remaining will be transferred to next round.</li>
 							<li><b>Level one:</b> For every tile destroyed you will get 2 points.</li>
