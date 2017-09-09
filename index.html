@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			Breakout game
+		</title>
+		<style>
+				*{
+					padding:0;
+					margin:0;
+				}
+				body{
+					background-color:#BCC6CC;
+				}
+				canvas{
+					background:#eee;
+					margin:auto;
+					display:block;
+					padding:10px;
+				}
+				#notify{
+					width:1200px;
+					height:10px;
+					margin:auto;
+				}
+				#info{
+					width:1200px;
+					margin:auto;
+					font-family:Verdana;
+					font-size:30px;
+					padding:10px;
+				}
+				#score{
+					float:left;
+				}
+				#lives{
+					float:right;
+				}
+				#level{
+					position:absolute;
+					left:47%;
+				}
+				.red{
+					background:red;
+				}
+				#pauseScreen{
+					position:absolute;
+					width:700px;
+					top:150px;
+					left:300px;
+					text-align:center;
+					background-color:rgba(35, 118, 159, 0.9);
+					padding:50px;
+					color:white;
+				}
+				#pauseScreen h3{
+					font-size:50px;
+				}
+				#pauseScreen p{
+					font-size:30px;
+				}
+				.noDisplay{
+					display:none;
+				}
+		</style>
+	</head>
+	<body>
+		<div id="info">
+			<div id="score">
+				Score: 0
+			</div>
+			<div id="level">
+				Level: 1
+			</div>
+			<div id="lives">
+				Lives: 0 
+			</div>
+		</div>
+		</br>
+		<!--HTML canvas element-->
+		<canvas id="canvas" width="1200" height="550">
+		</canvas>
+		<div id="notify">
+		</div>
+		<div id="pauseScreen" class="noDisplay">
+			<h3>Game Paused &#9786;</h3>
+			</br></br>
+			<p>Press Spacebar to continue</p>
+		</div>
+		<script>
+			//To access the canvas in the html page
+			var canvas = document.getElementById("canvas");
+			//If canvas is supported
+			if(canvas.getContext){
+				//Get the context
+				var ctx = canvas.getContext("2d");
+				var x = canvas.width/2;
+				var y = canvas.height/2;
+				var dx = 2;
+				var dy = -4;
+				var ballRadius = 20;
+				var ballColor="#234344",bColor;
+				var paddleHeight = 14;
+				var paddleWidth = 150;
+				var paddleX = (canvas.width - paddleWidth)/2;
+				var paddleY = canvas.height - paddleHeight;
+				var keyPressed = [false,false];
+				var brickX,brickY;
+				var column,brickWidth=75,brickHeight=30,row=3,brickLeftOffset=5,brickTopOffset=50,brickPadding=8,lives=2,score=0,bricksCount,bricks=[],level=1,dscore=2,strengthTotal=0;
+				//initial arrangement
+				var pause = false;
+				//To get the various boxes
+				var scoreBox = document.querySelector("#score");
+				var livesBox = document.querySelector("#lives");
+				var notifyBox = document.querySelector("#notify");
+				var levelBox = document.querySelector("#level");
+				livesBox.innerHTML="Lives: "+lives;
+ 				//Brick arrangement
+				function findNoOfCol(){
+					/*
+					This function finds the no of column of bricks to be laid.
+					*/
+					var width = canvas.width;
+					column = Math.floor(width/(brickWidth+brickPadding));
+					var totalWidth = column * (brickWidth+brickPadding);
+					//Depending on the number of column it then finds out the left offset
+					brickLeftOffset = (width-totalWidth)/2;
+				}
+				function elevate(){
+					/*
+						At the begining of every level this function does bricks initialization.
+					*/
+					findNoOfCol();
+					bricks = [];
+					strengthTotal = 0;
+					for(var i=0;i<column;i++){
+						bricks[i] = [];
+						for(var j=0;j<row;j++){
+							/*
+								x,y coordinate specify the position of the brick on the screen.
+								toShow specifies whether the brick is to be shown or not.
+							*/
+							var s = Math.floor((Math.random()*3))+1;
+							bricks[i][j] = {x:0,y:0,toShow:1,strength:s,color:""};
+							strengthTotal += s;
+						}
+					}
+				}
+				//To setup bricks for first level
+				elevate();
+				function drawBricks(){
+					//This function paints bricks on to the canvas
+					for(var i=0;i<column;i++){
+						for(var j=0;j<row;j++){
+							if(bricks[i][j].toShow == 1){
+								//If brick is to be shown, then find its coordinates
+								brickX = (i*(brickWidth+brickPadding))+brickLeftOffset;
+								brickY = (j*(brickHeight+brickPadding))+brickTopOffset;
+								//Draw the brick
+								ctx.beginPath();
+								ctx.rect(brickX,brickY,brickWidth,brickHeight);
+								if(bricks[i][j].color===""){
+									bricks[i][j].color = ballColor;
+								}
+								ctx.fillStyle = bricks[i][j].color;
+								ctx.fill();
+								ctx.closePath();
+								bricks[i][j].x = brickX;
+								bricks[i][j].y = brickY;
+							}
+						}
+					}
+				}
+				//End of brick arrangement code
+				function detectCollission(b){
+					//This function detects ball collission with the brick
+					var xCord = [x+ballRadius,x-ballRadius,x,x];
+					var yCord = [y,y,y+ballRadius,y-ballRadius];
+					for(var i=0;i<4;i++){
+						if(b.x<xCord[i]&&xCord[i]<b.x+brickWidth&&b.y<yCord[i]&&b.y+brickHeight>yCord[i]){
+							return true;
+						}
+					}
+					return false;
+				}
+				//Collission detection code
+				function checkCollission(){
+					for(var i=0;i<column;i++){
+						for(var j=0;j<row;j++){
+							var b = bricks[i][j];
+							if(b.toShow == 1){
+								//This if statement checks whether the ball has collided with the brick
+								if(detectCollission(b)){
+									//console.log(detectCollission(b));
+									b.strength--;
+									b.color = randomColor();
+									if(b.strength==0){
+										bricks[i][j].toShow = 0;
+									}
+									dy = -dy;
+									score+=dscore;
+									scoreBox.innerHTML = "Score: " + score;
+									strengthTotal--;
+									ballColor = randomColor();
+									//console.log(bricksCount);
+									if(strengthTotal==0){
+										clearInterval(control);
+										brickWidth-=20;
+										brickHeight+=5;
+										brickTopOffset+=5;
+										row+=1;
+										level++;
+										//to increase speed level by level
+										if(level<=3){
+											x = paddleX+paddleWidth/2;
+											y =	paddleY;
+											dy=-1.3*Math.abs(dy);
+											elevate();
+											lives+=2;
+											dscore*=2;
+											levelBox.innerHTML = "Level: " + level;
+											livesBox.innerHTML = "Lives: " + lives;
+											control = setInterval(draw,10);
+										}
+										else{
+											alert("Congratulations! You have finished this game!\nYour final score is: "+score);	
+											location.assign("intro.html");
+										}
+									}
+								}
+							}	
+						}
+					}
+				}
+				//End of collission detection code
+				document.addEventListener("keydown",handleKeyDown,false);
+				document.addEventListener("keyup",handleKeyUp,false);
+				function randomColor(){
+					var colors = ["#800080","#46528d","#7dbea7","#6b5e6b","#00C957","#EE7621","#7D9EC0","#F08080","#008080"];
+					var pos = Math.floor(Math.random()*colors.length);
+					return colors[pos];
+				}
+				function drawPaddle(){
+					ctx.beginPath();
+					ctx.rect(paddleX,paddleY,paddleWidth,paddleHeight);
+					ctx.fillStyle="blue";
+					ctx.fill();
+					ctx.closePath();
+				}
+				function clearClass(){
+					notifyBox.className="";
+				}
+				function drawBall(){
+					ctx.beginPath();
+					ctx.arc(x,y,ballRadius,0,Math.PI*2);
+					if(y+dy<ballRadius){
+						//when the ball has touched the upper part of the screen
+						dy=-dy;
+					}
+					else if(x+dx<ballRadius||x+dx+ballRadius>canvas.width){
+						//When the ball has touched left or right part of the screen
+						dx=-dx;
+					}
+					else if(y+dy+ballRadius>canvas.height){
+						//If the ball has touched the bottom part of the screen
+						if(x>paddleX&&x<paddleX+paddleWidth){
+							//If the ball lies b/w the paddle's left and right boundary then continue 
+							dy=-dy;
+							//A way so that when ball touches the edge then there is more deflection
+							if(x<paddleX+paddleWidth*(2/10)){
+								dx=(dx/Math.abs(dx))*4;
+							}
+							else if(x>(8/10)*paddleWidth+paddleX){
+								dx=(dx/Math.abs(dx))*4;
+							}
+							else{
+								dx=(dx/Math.abs(dx))*2;
+							}
+						}
+						else{
+							/*
+							If the ball is outside the paddle boundaries, then the player has lost one life.
+							*/
+							dy=-dy;
+							lives--;	
+							notifyBox.className="red";
+							livesBox.innerHTML = "Lives: " + lives;
+							setTimeout(clearClass,150);
+							if(lives<0){
+								//If at any stage the number of lives is less than 0, the game is over.
+								alert("Game Over!!\n\nYour final score is: "+score);
+								//Go back to the start page!!
+								location.assign("intro.html");
+							}
+						}
+					}
+					ctx.fillStyle=ballColor;
+					ctx.fill();
+					ctx.closePath();
+				}
+				function draw(){
+					ctx.clearRect(0,0,canvas.width,canvas.height);
+					drawBall();
+					drawPaddle();
+					drawBricks();
+					checkCollission();
+					x+=dx;
+					y+=dy;
+					if(keyPressed[1] && paddleX+paddleWidth<canvas.width){
+						paddleX+=10;
+					}
+					else if(keyPressed[0] && paddleX>0){
+						paddleX-=10;
+					}
+				}
+				function handleKeyDown(e){
+					if(e.keyCode==39){
+						//right key pressed
+						keyPressed[1]=true;
+					}
+					else if(e.keyCode==37){
+						//left key pressed
+						keyPressed[0]=true;
+					}
+					else if(!pause && e.keyCode==32){
+						pause = true;
+						clearInterval(control);
+						document.querySelector('#pauseScreen').className="";
+					}
+					else if(pause && e.keyCode==32){
+						pause = false;
+						control = setInterval(draw,10);
+						document.querySelector('#pauseScreen').className="noDisplay";
+					}
+					
+				}
+				function handleKeyUp(e){
+					if(e.keyCode==39){
+						//right key released
+						keyPressed[1]=false;
+					}
+					else if(e.keyCode==37){
+						//left key released
+						keyPressed[0]=false;
+					}
+				}
+				var control = setInterval(draw,10);
+			}
+			else{
+				alert("Canvas not supported in your browser. Update to latest browser.");
+			}
+		</script>
+	</body>
+</html>
